@@ -84,8 +84,8 @@
     self.collisionBehavior.collisionDelegate = self;
     
     self.dynamicBallBehavior.elasticity = 1.0;
-    self.dynamicBallBehavior.density = 1.0;
-    self.dynamicBallBehavior.allowsRotation = NO;
+    self.dynamicBallBehavior.density = 0.5;
+    self.dynamicBallBehavior.allowsRotation = YES;
     self.dynamicBallBehavior.friction = 0.0;
     self.dynamicBallBehavior.resistance = 0.0;
     
