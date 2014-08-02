@@ -9,10 +9,18 @@
 #import "ViewController.h"
 #import "BlockView.h"
 
-@interface ViewController () <UICollisionBehaviorDelegate>
+typedef enum {
+    PLAYER_1 = 1,
+    PLAYER_2 = 2,
+    NONE
+} Player;
+
+@interface ViewController () <UICollisionBehaviorDelegate, UIAlertViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UIView *paddle;
 @property (weak, nonatomic) IBOutlet UIView *ball;
+@property (weak, nonatomic) IBOutlet UILabel *scorePlayer1Label;
+@property (weak, nonatomic) IBOutlet UILabel *scorePlayer2Label;
 
 @property (weak, nonatomic) BlockView *block;
 @property UIDynamicAnimator *dynamicAnimator;
@@ -23,6 +31,10 @@
 @property UIDynamicItemBehavior *dynamicPaddleBehavior;
 @property UIDynamicItemBehavior *dynamicBlockBehavior;
 @property CGPoint ballVelocity;
+@property int scorePlayer1;
+@property int scorePlayer2;
+@property Player playerTurn;
+
 
 @end
 
@@ -32,9 +44,74 @@
 {
     [super viewDidLoad];
     
+    // Instead of using lives, player who reaches 0 dies
+    // The surviver wins the game
+    
+
+    self.playerTurn = NONE;
+    [self updatePlayersStatusWithScore:0];
+    
     [self initializeDynamics];
     [self initializeBlocks];
+    
+    self.playerTurn = PLAYER_1;
 
+}
+
+- (void) gameOver
+{
+    [self.dynamicAnimator removeAllBehaviors];
+    
+    for ( BlockView * block in [self.view subviews]) {
+        
+        if ([block isKindOfClass:BlockView.class]) {
+            [block removeFromSuperview];
+        }
+        
+    }
+    
+    
+    NSString* winner;
+    if (self.scorePlayer1 > self.scorePlayer2)
+    {
+        winner = @"Player 1";
+    } else {
+        winner = @"Player 2";
+    }
+    
+    self.playerTurn = NONE;
+    
+    UIAlertView * alertView = [[UIAlertView alloc]init];
+    alertView.delegate = self;
+    alertView.title = @"Game result!";
+    alertView.message = [winner stringByAppendingString:@" won!"];
+    [alertView addButtonWithTitle:@"New Game"];
+    [alertView dismissWithClickedButtonIndex:0 animated:YES];
+    
+    [alertView show];
+
+
+}
+
+- (void) updatePlayersStatusWithScore:(int) points
+{
+    if (self.playerTurn == NONE) {
+        self.scorePlayer1 = 500;
+        self.scorePlayer2 = 500;
+    } else if (self.playerTurn == PLAYER_1) {
+        self.scorePlayer1 += points;
+    } else {
+        self.scorePlayer2 += points;
+    }
+    self.scorePlayer1Label.text = [NSString stringWithFormat:@"%i", self.scorePlayer1 ];
+    self.scorePlayer2Label.text = [NSString stringWithFormat:@"%i", self.scorePlayer2 ];
+    if (self.scorePlayer1 <= 0 || self.scorePlayer2 <= 0) {
+        
+        [self gameOver];
+        
+    }
+    
+    
 }
 
 - (IBAction)onDrag:(UIPanGestureRecognizer *)sender
@@ -47,10 +124,10 @@
 
 - (void) startBallMoving
 {
-    CGPoint opositeVelocity = CGPointMake(self.ballVelocity.x * -1.0,
-                                          self.ballVelocity.y * -1.0);
+//    CGPoint opositeVelocity = CGPointMake(self.ballVelocity.x * -1.0,
+//                                          self.ballVelocity.y * -1.0);
     
-    [self.dynamicBallBehavior addLinearVelocity:opositeVelocity forItem:self.ball];
+    [self.dynamicBallBehavior addLinearVelocity:self.ballVelocity forItem:self.ball];
 }
 
 - (void) restartGame
@@ -167,6 +244,14 @@
 }
 
 
+- (void)alertView:(UIAlertView *)alertView willDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+    [self restartGame];
+    [self startBallMoving];
+    self.playerTurn = NONE;
+    [self updatePlayersStatusWithScore:0];
+}
+
 #pragma mark collision delegate
 
 
@@ -190,6 +275,14 @@
 
         [self.dynamicAnimator updateItemUsingCurrentState:self.ball];
         
+        [self updatePlayersStatusWithScore:-500];
+        
+        if (self.playerTurn == PLAYER_1) {
+            self.playerTurn = PLAYER_2;
+        } else {
+            self.playerTurn = PLAYER_1;
+        }
+        
     }
     
 }
@@ -205,10 +298,11 @@
             [self blockDestroyedAnimation:((BlockView*)item2)];
         }
         
-       
+        [self updatePlayersStatusWithScore:100];
+
         
     }
-    
+    // If all blocks where destroyed
     if ([item1 isEqual:self.paddle] || [item2 isEqual:self.paddle]) {
         if ([self.collisionBehavior items].count == 2) // ball and paddle
         {
@@ -217,6 +311,8 @@
                                            selector:@selector(restartGame)
                                            userInfo:nil
                                             repeats:NO];
+            
+            
         }
     }
     
