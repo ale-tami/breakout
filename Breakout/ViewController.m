@@ -17,6 +17,7 @@
 @property (weak, nonatomic) BlockView *block;
 @property UIDynamicAnimator *dynamicAnimator;
 @property UIPushBehavior *pushBehavior;
+@property UISnapBehavior *snapBehavior;
 @property UICollisionBehavior *collisionBehavior;
 @property UIDynamicItemBehavior *dynamicBallBehavior;
 @property UIDynamicItemBehavior *dynamicPaddleBehavior;
@@ -32,7 +33,7 @@
     [super viewDidLoad];
     
     [self initializeDynamics];
-    //[self initializeBlocks];
+    [self initializeBlocks];
 
 }
 
@@ -100,6 +101,7 @@
     [self.dynamicAnimator addBehavior:self.dynamicPaddleBehavior];
     [self.dynamicAnimator addBehavior:self.dynamicBallBehavior];
    // [self.dynamicAnimator addBehavior:self.dynamicBlockBehavior];
+    
 }
 
 - (void) initializeBlocks
@@ -110,7 +112,7 @@
     float originY = 0.0;
     float originX = 0.0;
     
-    for (int i = 0; i < 40; i++) {
+    for (int i = 1; i <= 50; i++) {
         
         block = [[BlockView alloc] initWithFrame:rect];
         [self.view addSubview:block];
@@ -119,7 +121,7 @@
         
         
         //Screen width 320
-        if (i >= 8  && ((i % 8) == 0)) {
+        if (i >= 8  && ((i % 10) == 0)) {
             originY += 16.0; // height + 1
             originX = 0.0;
         } else {
@@ -137,6 +139,8 @@
     
     [self.dynamicAnimator addBehavior:self.dynamicBlockBehavior];
 }
+
+
 
 #pragma mark collision delegate
                                    
@@ -168,8 +172,23 @@
 - (void)collisionBehavior:(UICollisionBehavior *)behavior beganContactForItem:(id<UIDynamicItem>)item1 withItem:(id<UIDynamicItem>)item2 atPoint:(CGPoint)p
 {
     if ([item1 isEqual:self.ball] && [item2 isKindOfClass:BlockView.class]) {
-        [(BlockView*)item2 removeFromSuperview];
-        [self.collisionBehavior removeItem:item2];
+        
+        //Extracted from apples docs
+        [UIView animateWithDuration:0.2
+                         animations:^{
+                             
+                             ((BlockView*)item2).alpha = 0.0;
+                             ((BlockView*)item2).center = CGPointMake(((BlockView*)item2).center.x,
+                                                                      ((BlockView*)item2).center.y - 36.0);
+                             [self.collisionBehavior removeItem:item2];
+                             [self.dynamicAnimator updateItemUsingCurrentState:((BlockView*)item2)];
+                         
+                         }
+                         completion:^(BOOL finished){
+                             [(BlockView*)item2 removeFromSuperview];
+                             
+                         }];
+        
     }
     
     if ([item1 isEqual:self.paddle] || [item2 isEqual:self.paddle]) {
