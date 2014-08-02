@@ -20,11 +20,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Breakout/ViewController.m"
-            timestampString = "428698364.987752"
+            timestampString = "428699360.661619"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "195"
-            endingLineNumber = "195"
+            startingLineNumber = "212"
+            endingLineNumber = "212"
             landmarkName = "-collisionBehavior:beganContactForItem:withItem:atPoint:"
             landmarkType = "5">
          </BreakpointContent>

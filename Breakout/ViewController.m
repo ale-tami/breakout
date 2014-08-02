@@ -119,6 +119,12 @@
         [blocksArray addObject:block];
         [self.collisionBehavior addItem:block];
         
+        if ((rand() % 4) == 1) {
+            block.hitCounter = 2;
+            block.backgroundColor = [UIColor magentaColor];
+        } else {
+            block.hitCounter = 1;
+        }
         
         //Screen width 320
         if (i >= 8  && ((i % 10) == 0)) {
@@ -141,9 +147,28 @@
 }
 
 
+- (void)blockDestroyedAnimation:(BlockView*) block
+{
+    //Extracted from apples docs, improved by me
+    [UIView animateWithDuration:0.2
+                     animations:^{
+                         
+                         block.alpha = 0.0;
+                         block.center = CGPointMake(block.center.x,
+                                                    block.center.y - 36.0);
+                         [self.collisionBehavior removeItem:block];
+                         [self.dynamicAnimator updateItemUsingCurrentState:block];
+                         
+                     }
+                     completion:^(BOOL finished){
+                         [block removeFromSuperview];
+                         
+                     }];
+}
+
 
 #pragma mark collision delegate
-                                   
+
 
 - (void)collisionBehavior:(UICollisionBehavior *)behavior beganContactForItem:(id<UIDynamicItem>)item withBoundaryIdentifier:(id<NSCopying>)identifier atPoint:(CGPoint)p
 {
@@ -173,21 +198,14 @@
 {
     if ([item1 isEqual:self.ball] && [item2 isKindOfClass:BlockView.class]) {
         
-        //Extracted from apples docs
-        [UIView animateWithDuration:0.2
-                         animations:^{
-                             
-                             ((BlockView*)item2).alpha = 0.0;
-                             ((BlockView*)item2).center = CGPointMake(((BlockView*)item2).center.x,
-                                                                      ((BlockView*)item2).center.y - 36.0);
-                             [self.collisionBehavior removeItem:item2];
-                             [self.dynamicAnimator updateItemUsingCurrentState:((BlockView*)item2)];
-                         
-                         }
-                         completion:^(BOOL finished){
-                             [(BlockView*)item2 removeFromSuperview];
-                             
-                         }];
+        if (((BlockView*)item2).hitCounter > 1) {
+            ((BlockView*)item2).hitCounter -= 1;
+            ((BlockView*)item2).backgroundColor = [UIColor orangeColor];
+        } else {
+            [self blockDestroyedAnimation:((BlockView*)item2)];
+        }
+        
+       
         
     }
     

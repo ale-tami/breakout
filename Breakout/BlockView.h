@@ -10,6 +10,6 @@
 
 @interface BlockView : UIView
 
-
+@property int hitCounter;
 
 @end
